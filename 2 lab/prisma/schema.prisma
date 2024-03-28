@@ -1,0 +1,51 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model Faculty {
+  faculty      String   @id
+  faculty_name String
+  pulpits      Pulpit[]
+}
+
+model Pulpit {
+  pulpit      String    @id
+  pulpit_name String
+  faculty     Faculty   @relation(fields: [faculty_id], references: [faculty], onUpdate: Cascade, onDelete: Cascade)
+  faculty_id  String
+  teachers    Teacher[]
+  subjects    Subject[]
+}
+
+model Teacher {
+  teacher      String @id
+  teacher_name String
+  pulpit       Pulpit @relation(fields: [pulpit_id], references: [pulpit], onUpdate: Cascade, onDelete: Cascade)
+  pulpit_id    String
+}
+
+model Subject {
+  subject      String @id
+  subject_name String
+  pulpit       Pulpit @relation(fields: [pulpit_id], references: [pulpit], onUpdate: Cascade, onDelete: Cascade)
+  pulpit_id    String
+}
+
+model Auditorium_Type {
+  auditorium_type     String       @id
+  auditorium_typename String
+  auditoriums         Auditorium[]
+}
+
+model Auditorium {
+  auditorium          String          @id
+  auditorium_name     String
+  auditorium_capacity Int
+  auditorium_type     Auditorium_Type @relation(fields: [auditorium_type_id], references: [auditorium_type], onUpdate: Cascade, onDelete: Cascade)
+  auditorium_type_id  String
+}

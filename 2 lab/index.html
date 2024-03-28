@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>University</title>
+    <style>
+        .pulpits {
+            display: flex;
+            justify-content: center;
+            gap: 50;
+        }
+        
+        .pulpit-item {
+            margin-right: 120px;
+        }
+    </style>
+</head>
+<body>
+    <div class="pages"></div>
+    <div class="pulpits">
+    </div>
+
+    <script>
+        function printData(data) {
+            console.log(data);
+            data[1].forEach(element => {
+                document.getElementsByClassName('pulpits')[0].innerHTML += `
+                    <div class="pulpit-item">
+                        <h2>${element.pulpit}</h2>
+                        <p>${element.pulpit_name}</p>
+                        <p>${element.faculty_id}</p>
+                        <p>Teachers: ${element._count.teachers}</p?
+                    </div>  
+                `;
+            });
+            let pages = Math.ceil(data[0] / 1);
+            for (let i = 1; i <= pages; i++) {
+                document.getElementsByClassName('pages')[0].innerHTML += `
+                    <div class="pagination-item">
+                        <a href='/index?page=${i}'>${i}</a><br/>
+                    </div>  
+                `;
+            }
+        }
+
+        let page = location.search.slice(location.search.indexOf('=') + 1);
+
+        const pulpits = fetch('http://localhost:3000/api/pulpits/page/' + page)
+            .then(response => response.json())
+            .then(data => printData(data))
+            .catch(err => console.log(err));
+    </script>
+</body>
+</html>

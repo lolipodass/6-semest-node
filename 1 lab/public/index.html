@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Turtle Ninjas</title>
+    <style>
+        .pagination {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+        }
+
+        .pagination button {
+            margin: 0 5px;
+            border-radius: 2px;
+            padding: 5px 10px;
+            border: none;
+            background-color: #007bff;
+            color: white;
+            cursor: pointer;
+        }
+
+        .pagination button:hover {
+            background-color: #0056b3;
+        }
+
+        .turtle-card {
+            display: flex;
+            justify-content: space-between;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            background-color: #f9f9f9;
+        }
+
+        .turtle-card h3 {
+            margin-top: 0;
+            color: #333;
+        }
+
+        .turtle-card p {
+            margin-top: 0px;
+            margin-bottom: 10px;
+            color: #666;
+        }
+
+        .content {
+            width: 50%;
+        }
+
+        .turtle-card img {
+            width: auto;
+            max-height: 150px;
+            margin-top: 10px;
+            margin-bottom: 10px;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            align-self: flex-end;
+        }
+
+
+        .upload-btn {
+            background-color: #007BFF;
+            color: #fff;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            text-decoration: none;
+            font-size: 16px;
+            transition: background-color 0.3s ease;
+            position: absolute;
+            right: 20px;
+            top: 20px;
+        }
+
+        .upload-btn:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Turtle Ninjas</h1>
+    <a href="/upload" class="upload-btn">Upload Turtle Image</a>
+    <div id="turtle-list"></div>
+    <div class="pagination" id="pagination"></div>
+
+    <script>
+        const turtleList = document.getElementById('turtle-list');
+        const pagination = document.getElementById('pagination');
+        let currentPage = 1;
+        const itemsPerPage = 3;
+        let allTurtles = []; // Store all fetched turtles
+
+        function fetchTurtles() {
+            fetch('/api/turtles')
+                .then(response => response.json())
+                .then(data => {
+                    allTurtles = data;
+                    console.log(allTurtles);
+                    displayTurtles();
+                    generatePagination();
+                })
+                .catch(error => console.error('Error:', error));
+        }
+
+        function displayTurtles() {
+            turtleList.innerHTML = '';
+            const start = (currentPage - 1) * itemsPerPage;
+            const end = start + itemsPerPage;
+            const turtlesToDisplay = allTurtles.slice(start, end);
+
+            turtlesToDisplay.forEach(turtle => {
+                const turtleElement = document.createElement('div');
+                turtleElement.className = 'turtle-card';
+                const imageUrl = `/images/${turtle.id}.jpg`;
+                turtleElement.innerHTML = `
+                <div class=content>
+                    <h3>${turtle.name}</h3>
+                    <p>Color: ${turtle.color}</p>
+                    <p>Weapon: ${turtle.weaponId ? turtle.weaponId : 'N/A'}</p>
+                    <p>Favorite Pizza: ${turtle.favoritePizzaId ? turtle.favoritePizzaId : 'N/A'}</p>
+                    <p>Second Favorite Pizza: ${turtle.secondFavoritePizzaId ? turtle.secondFavoritePizzaId : 'N/A'}</p>
+                    </div>
+                    <img src="${imageUrl}" alt="${turtle.name}'s image">
+                `;
+                turtleList.appendChild(turtleElement);
+            });
+        }
+
+        function generatePagination() {
+            pagination.innerHTML = '';
+            const totalPages = Math.ceil(allTurtles.length / itemsPerPage);
+            for (let i = 1; i <= totalPages; i++) {
+                const pageButton = document.createElement('button');
+                pageButton.textContent = i;
+                pageButton.addEventListener('click', () => {
+                    currentPage = i;
+                    displayTurtles();
+                });
+                pagination.appendChild(pageButton);
+            }
+        }
+
+        fetchTurtles();
+    </script>
+</body>
+
+</html>
