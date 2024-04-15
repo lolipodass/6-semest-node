@@ -29,7 +29,7 @@ const createFaculty = async (req, res) => {
         req.body.pulpits.forEach(async (p) => {
             await prismaClient.pulpit.upsert({
                 where: { pulpit: p.pulpit },
-                create: { 
+                create: {
                     pulpit: p.pulpit,
                     pulpit_name: p.pulpit_name,
                     faculty_id: faculty.faculty

@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Passport basic - Main</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        h1 {
+            display: block;
+            font-size: 30px;
+        }
+    </style>
+</head>
+
+<body>
+    <h1></h1>
+    <script>
+        const user = fetch('http://localhost:3000/user')
+            .then((res) => res.json())
+            .then((data) => {
+                if (!data.username) {
+                    document.querySelector('h1').innerHTML = "Hello, Guest";
+                } else {
+                    document.querySelector('h1').innerHTML = "HI😊, " + data.username;
+                }
+            })
+    </script>
+</body>
+
+</html>

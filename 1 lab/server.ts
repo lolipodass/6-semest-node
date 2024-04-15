@@ -11,7 +11,7 @@ import { handleError } from "./utils/errorHandler.ts";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-const port = 3999;
+const port = 3007;
 
 
 const app = express();
@@ -43,13 +43,13 @@ app.get('/upload', (req, res) => {
 
 
 
-app.post('/upload', upload.single('image'), (req, res) => {
+app.post('/upload', upload.single('image'), async (req, res) => {
     try {
 
         const turtleId = parseInt(req.body.turtleId, 10);
         const image = req.file;
 
-        if (GetTurtleById(turtleId) == null) {
+        if (await GetTurtleById(turtleId) == null) {
             return res.status(400).send('Turtle not found');
         }
 

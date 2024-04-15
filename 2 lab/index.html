@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -10,12 +11,13 @@
             justify-content: center;
             gap: 50;
         }
-        
+
         .pulpit-item {
             margin-right: 120px;
         }
     </style>
 </head>
+
 <body>
     <div class="pages"></div>
     <div class="pulpits">
@@ -23,6 +25,7 @@
 
     <script>
         function printData(data) {
+            const elementsPerPage = 10;
             console.log(data);
             data[1].forEach(element => {
                 document.getElementsByClassName('pulpits')[0].innerHTML += `
@@ -34,7 +37,7 @@
                     </div>  
                 `;
             });
-            let pages = Math.ceil(data[0] / 1);
+            let pages = Math.ceil(data[0] / elementsPerPage);
             for (let i = 1; i <= pages; i++) {
                 document.getElementsByClassName('pages')[0].innerHTML += `
                     <div class="pagination-item">
@@ -52,4 +55,5 @@
             .catch(err => console.log(err));
     </script>
 </body>
+
 </html>

@@ -1,51 +1,52 @@
 generator client {
-  provider = "prisma-client-js"
+  provider        = "prisma-client-js"
+  previewFeatures = ["relationJoins"]
 }
 
 datasource db {
-  provider = "sqlite"
-  url      = "file:./dev.db"
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
 model Faculty {
-  faculty      String   @id
-  faculty_name String
+  faculty      String   @id @db.VarChar(15)
+  faculty_name String   @db.VarChar(255)
   pulpits      Pulpit[]
 }
 
 model Pulpit {
-  pulpit      String    @id
-  pulpit_name String
+  pulpit      String    @id @db.VarChar(15)
+  pulpit_name String    @db.VarChar(255)
   faculty     Faculty   @relation(fields: [faculty_id], references: [faculty], onUpdate: Cascade, onDelete: Cascade)
-  faculty_id  String
+  faculty_id  String    @db.VarChar()
   teachers    Teacher[]
   subjects    Subject[]
 }
 
 model Teacher {
-  teacher      String @id
-  teacher_name String
+  teacher      String @id @db.VarChar(15)
+  teacher_name String @db.VarChar(255)
   pulpit       Pulpit @relation(fields: [pulpit_id], references: [pulpit], onUpdate: Cascade, onDelete: Cascade)
-  pulpit_id    String
+  pulpit_id    String @db.VarChar(15)
 }
 
 model Subject {
-  subject      String @id
-  subject_name String
+  subject      String @id @db.VarChar(15)
+  subject_name String @db.VarChar(255)
   pulpit       Pulpit @relation(fields: [pulpit_id], references: [pulpit], onUpdate: Cascade, onDelete: Cascade)
-  pulpit_id    String
+  pulpit_id    String @db.VarChar(15)
 }
 
 model Auditorium_Type {
-  auditorium_type     String       @id
-  auditorium_typename String
+  auditorium_type     String       @id @db.VarChar(15)
+  auditorium_typename String       @db.VarChar(255)
   auditoriums         Auditorium[]
 }
 
 model Auditorium {
-  auditorium          String          @id
-  auditorium_name     String
+  auditorium          String          @id @db.VarChar(15)
+  auditorium_name     String          @db.VarChar(255)
   auditorium_capacity Int
   auditorium_type     Auditorium_Type @relation(fields: [auditorium_type_id], references: [auditorium_type], onUpdate: Cascade, onDelete: Cascade)
-  auditorium_type_id  String
+  auditorium_type_id  String          @db.VarChar(15)
 }

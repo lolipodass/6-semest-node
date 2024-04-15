@@ -52,13 +52,13 @@ CREATE TABLE "Auditorium" (
 );
 
 -- AddForeignKey
-ALTER TABLE "Pulpit" ADD CONSTRAINT "Pulpit_faculty_id_fkey" FOREIGN KEY ("faculty_id") REFERENCES "Faculty"("faculty") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "Pulpit" ADD CONSTRAINT "Pulpit_faculty_id_fkey" FOREIGN KEY ("faculty_id") REFERENCES "Faculty"("faculty") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Teacher" ADD CONSTRAINT "Teacher_pulpit_id_fkey" FOREIGN KEY ("pulpit_id") REFERENCES "Pulpit"("pulpit") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "Teacher" ADD CONSTRAINT "Teacher_pulpit_id_fkey" FOREIGN KEY ("pulpit_id") REFERENCES "Pulpit"("pulpit") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Subject" ADD CONSTRAINT "Subject_pulpit_id_fkey" FOREIGN KEY ("pulpit_id") REFERENCES "Pulpit"("pulpit") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "Subject" ADD CONSTRAINT "Subject_pulpit_id_fkey" FOREIGN KEY ("pulpit_id") REFERENCES "Pulpit"("pulpit") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Auditorium" ADD CONSTRAINT "Auditorium_auditorium_type_id_fkey" FOREIGN KEY ("auditorium_type_id") REFERENCES "Auditorium_Type"("auditorium_type") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "Auditorium" ADD CONSTRAINT "Auditorium_auditorium_type_id_fkey" FOREIGN KEY ("auditorium_type_id") REFERENCES "Auditorium_Type"("auditorium_type") ON DELETE CASCADE ON UPDATE CASCADE;

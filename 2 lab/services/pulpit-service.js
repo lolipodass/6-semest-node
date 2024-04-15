@@ -29,15 +29,16 @@ const getPulpitsByPage = async (req, res) => {
         }
     });
     let page = +req.params.page - 1;
+    const elementsPerPage = 10;
     let result = [];
 
-    for (let i = 1 * page; i < 1 * page + 1; i++) {
+    for (let i = elementsPerPage * page; i < elementsPerPage * page + elementsPerPage; i++) {
         if (pulpits[i] !== undefined) {
             result.push(pulpits[i]);
         }
     }
 
-    return [ pulpits.length, result ];
+    return [pulpits.length, result];
 };
 
 const createPulpit = async (req, res) => {
@@ -114,7 +115,7 @@ const getPulpitsWithVladimir = async (req, res) => {
             teachers: {
                 some: {
                     teacher_name: {
-                        contains: 'Владимир'
+                        contains: 'bur bo ab'
                     }
                 }
             }

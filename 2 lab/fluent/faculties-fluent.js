@@ -28,6 +28,11 @@ class FacultyFluent {
 
         return this;
     }
+    async select(id) {
+        const facultySubjects = await prismaClient.faculty.findUnique({ where: { faculty: id, } }).pulpits()
+
+        return facultySubjects;
+    }
 }
 
 export default FacultyFluent;

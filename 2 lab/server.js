@@ -27,11 +27,11 @@ app.get('/index', (req, res) => {
 
 app.get('/fluent', async (req, res) => {
     const facultyFluent = new FacultyFluent();
-    (await (await facultyFluent.addFaculty('fit')).addFaculty('fip')).removeFaculty('fip');
-    
-    res.json(facultyFluent.faculties);
+    // (await (await facultyFluent.addFaculty('fit')).addFaculty('fip')).removeFaculty('fip');
+    let elem = await facultyFluent.select("fas");
+    res.json(elem);
 });
 
-app.listen(3000, () => {
-    console.log('Server running on localhost:3000');
+app.listen(3008, () => {
+    console.log('Server running on localhost:3008');
 });
