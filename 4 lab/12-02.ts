@@ -115,7 +115,7 @@ app.get('/refresh-token', (req, res) => {
     const newAccessToken = generateAccessToken(username);
     const newRefreshToken = generateRefreshToken(username);
 
-    redis.sadd('blacklist', refreshToken);
+    redis.set('blacklist', refreshToken);
 
     res.cookie('accessToken', newAccessToken, { httpOnly: true, sameSite: 'strict' });
     res.cookie('refreshToken', newRefreshToken, { httpOnly: true, sameSite: 'strict', path: '/refresh-token' });
@@ -128,7 +128,7 @@ app.get('/logout', (req, res) => {
   const refreshToken = req.cookies.refreshToken;
 
   if (refreshToken) {
-    redis.sadd('blacklist', refreshToken);
+    redis.set('blacklist', refreshToken);
   }
 
   res.clearCookie('accessToken');

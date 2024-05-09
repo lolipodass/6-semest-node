@@ -1,0 +1,13 @@
+[ req ]
+default_bits = 2048
+prompt = no
+default_md = sha256
+distinguished_name = dn
+
+[ dn ]
+C = BY
+ST = MINSK
+L = MINSK
+O = BSTU
+OU = BSTUU
+CN = CA-LAB15-KAL

@@ -1,0 +1,26 @@
+{
+  "name": "8 lab",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "dev": "nodemon server.ts",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "axios": "^1.6.8",
+    "node-cron": "^3.0.3",
+    "node-telegram-bot-api": "^0.65.1",
+    "request": "^2.88.2"
+  },
+  "devDependencies": {
+    "@types/node": "^20.12.8",
+    "@types/node-cron": "^3.0.11",
+    "@types/node-telegram-bot-api": "^0.64.6",
+    "nodemon": "^3.1.0",
+    "typescript": "^5.4.5"
+  }
+}
