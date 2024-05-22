@@ -2,7 +2,7 @@ import express, { NextFunction, Request, Response } from 'express';
 import session from 'express-session';
 import jwt from 'jsonwebtoken';
 import { Sequelize, Model, DataTypes } from 'sequelize';
-import Redis from 'ioredis';
+import Redis, { print } from 'ioredis';
 import cookieParser from 'cookie-parser';
 import path from 'path';
 
@@ -71,7 +71,7 @@ const isAuthenticated = (req: RequestWithUserId, res: Response, next: NextFuncti
 };
 
 app.get('/login', (req, res) => {
-  res.send(`
+  return res.send(`
     <h1>Форма входа</h1>
     <form action="/login" method="POST">
       <input type="text" name="username" placeholder="Имя пользователя" required /><br/>
@@ -84,6 +84,10 @@ app.get('/login', (req, res) => {
 app.post('/login', async (req, res) => {
   const { username, password } = req.body;
 
+  if (!username || !password) {
+    return res.status(401).send('Asses denied, use localhost:3000/login');
+  }
+
   const user: any = await User.findOne({ where: { username, password } });
 
   if (user) {
@@ -93,36 +97,59 @@ app.post('/login', async (req, res) => {
     res.cookie('accessToken', accessToken, { httpOnly: true, sameSite: 'strict' });
     res.cookie('refreshToken', refreshToken, { httpOnly: true, sameSite: 'strict', path: '/refresh-token' });
 
-    res.redirect('/resource');
+    return res.redirect('/resource');
   } else {
-    res.redirect('/login');
+    return res.redirect('/login');
   }
 });
 
 app.get('/refresh-token', (req, res) => {
-  const refreshToken = req.cookies.refreshToken;
+  try {
+    const refreshToken = req.cookies.refreshToken;
 
-  if (!refreshToken) {
-    return res.status(401).send('Asses denied, use localhost:3000/login');
-  }
-
-  jwt.verify(refreshToken, 'refresh-secret', (err: any, decoded: any) => {
-    if (err) {
+    if (!refreshToken) {
       return res.status(401).send('Asses denied, use localhost:3000/login');
     }
 
-    const username = decoded.username;
-    const newAccessToken = generateAccessToken(username);
-    const newRefreshToken = generateRefreshToken(username);
+    console.log(refreshToken)
 
-    redis.set('blacklist', refreshToken);
+    jwt.verify(refreshToken, 'refresh-secret', (err: any, decoded: any) => {
+      if (err) {
+        return res.status(401).send('Asses denied, use localhost:3000/login');
+      }
 
-    res.cookie('accessToken', newAccessToken, { httpOnly: true, sameSite: 'strict' });
-    res.cookie('refreshToken', newRefreshToken, { httpOnly: true, sameSite: 'strict', path: '/refresh-token' });
 
-    res.redirect('/resource');
-  });
-});
+      redis.lrange('blacklist', 0, -1, async (err, replies) => {
+
+        if (!replies) {
+          console.error('No replies received from Redis');
+          return res.status(500).send('Internal server error');
+        }
+
+        const isBlacklisted = replies.includes(refreshToken);
+        if (isBlacklisted) {
+          return res.status(401).send('Asses denied, use localhost:3000/login');
+        }
+
+
+        const username = decoded.username;
+        const newAccessToken = generateAccessToken(username);
+        const newRefreshToken = generateRefreshToken(username);
+
+        redis.lpush('blacklist', refreshToken);
+
+        res.cookie('accessToken', newAccessToken, { httpOnly: true, sameSite: 'strict' });
+        res.cookie('refreshToken', newRefreshToken, { httpOnly: true, sameSite: 'strict', path: '/refresh-token' });
+
+        return res.redirect('/resource');
+      });
+    });
+  }
+  catch (err) {
+    console.error(err);
+  }
+}
+);
 
 app.get('/logout', (req, res) => {
   const refreshToken = req.cookies.refreshToken;
@@ -134,15 +161,15 @@ app.get('/logout', (req, res) => {
   res.clearCookie('accessToken');
   res.clearCookie('refreshToken');
 
-  res.send('successful logout');
+  return res.send('successful logout');
 });
 
 app.get('/resource', isAuthenticated, (req: RequestWithUserId, res) => {
-  res.send(`RESOURCE: userID ${req.username}`);
+  return res.send(`RESOURCE: userID ${req.username}`);
 });
 
 app.get('*', (req: Request, res: Response) => {
-  res.sendFile(path.join(__dirname + '/404.html'));
+  return res.sendFile(path.join(__dirname + '/404.html'));
 });
 
 app.listen(port, () => {
