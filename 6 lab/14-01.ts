@@ -7,19 +7,19 @@ import cookieParser from 'cookie-parser';
 const app = express();
 const prisma = new PrismaClient();
 
-interface RequestWithUserId extends Request {
-  user?: string;
+interface RequestWithUser extends Request {
+  user?: any;
 }
 
 const generateAccessToken = (id: number) => {
-  return jwt.sign({ id }, 'access-secret', { expiresIn: '10m' });
+  return jwt.sign({ id }, 'access-secret', { expiresIn: '10d' });
 };
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 
-app.use((req: RequestWithUserId, res, next) => {
+app.use((req: RequestWithUser, res, next) => {
   try {
     const accessToken = req.cookies.accessToken;
 
@@ -54,7 +54,6 @@ const checkAbility = (action: string, subject: string, params: string = "") => {
   return async (req: Request, res: Response, next: NextFunction) => {
     const ability = (req as any).ability;
     const { id } = req.params;
-    //  console.log(ability.can(action, subject));
 
 
     if ((subject !== 'user' && action === 'update')
@@ -81,7 +80,7 @@ const checkAbility = (action: string, subject: string, params: string = "") => {
   };
 };
 
-app.use((req: RequestWithUserId, res, next) => {
+app.use((req: RequestWithUser, res, next) => {
   const user: any = req.user;
   const ability = defineAbility((can, cannot) => {
 
@@ -102,12 +101,6 @@ app.use((req: RequestWithUserId, res, next) => {
     }
     else if (user.role === 'admin') {
       can("manage", "all");
-      //  can('read', 'Commit');
-      //  can('read', 'allUsers');
-      //  can('read', 'Repo');
-      //  can('read', 'Ability');
-      //  can('manage', 'Repo');
-      //  can('manage', 'Commit');
     }
   });
 
@@ -115,12 +108,16 @@ app.use((req: RequestWithUserId, res, next) => {
   next();
 });
 
-app.get('/api/ability', checkAbility('read', 'Ability'), (req, res) => {
-  res.json(JSON.stringify((req as any).ability));
+app.all('/api/ability', checkAbility('read', 'Ability'), (req, res) => {
+  if (req.method === 'GET')
+    res.json((req as any).ability);
+  else
+    res.status(405).send('Метод не поддерживается');
 });
 
-app.get('/register', (req, res) => {
-  res.send(`
+app.route('/register')
+  .get((req, res) => {
+    res.send(`
        <h1>Форма регистрации</h1>
        <form action="/register" method="POST">
          <input type="text" name="username" placeholder="Имя пользователя" required /><br/>
@@ -129,19 +126,23 @@ app.get('/register', (req, res) => {
          <button type="submit">Зарегистрироваться</button>
        </form>
     `);
-});
+  })
+  .post(async (req, res, next) => {
+    try {
+      const { username, email, password } = req.body;
+      const user = await prisma.users.create({
+        data: { username, email, password, role: 'user' },
+      });
 
-app.post('/register', async (req, res, next) => {
-  try {
-    const { username, email, password } = req.body;
-    const user = await prisma.users.create({
-      data: { username, email, password, role: 'user' },
-    });
-    res.status(201).json({ message: 'Пользователь успешно зарегистрирован', user });
-  } catch (error) {
-    next(error);
-  }
-});
+      res.status(201).json({ message: 'Пользователь успешно зарегистрирован', user });
+    } catch (error) {
+      next(error);
+    }
+  })
+  .all((req, res) => {
+    res.status(405).send('Метод не поддерживается');
+  });
+
 
 app.get('/login', (req, res) => {
   res.send(`
@@ -154,8 +155,13 @@ app.get('/login', (req, res) => {
     `);
 });
 
-app.post('/login', async (req: RequestWithUserId, res) => {
+app.post('/login', async (req: RequestWithUser, res) => {
   const { username, password } = req.body;
+
+  if (!username || !password) {
+    res.redirect('/login');
+    return;
+  }
 
   const user: any = await prisma.users.findUnique({ where: { username, password } });
 
@@ -256,10 +262,13 @@ app.get('/api/repos/:id', checkAbility('read', 'Repo'), async (req, res, next) =
   }
 });
 
-app.post('/api/repos', checkAbility('create', 'Repo'), async (req: RequestWithUserId, res, next) => {
+app.post('/api/repos', checkAbility('create', 'Repo'), async (req: RequestWithUser, res, next) => {
   try {
     const { name } = req.body;
-    const authorId = (req.user as any).id;
+    if (!name || typeof name !== 'string') {
+      return res.status(400).json({ message: 'name is not valid' });
+    }
+    const authorId = req.user.id;
     const repo = await prisma.repos.create({
       data: { name, authorId },
     });
@@ -272,7 +281,17 @@ app.post('/api/repos', checkAbility('create', 'Repo'), async (req: RequestWithUs
 app.put('/api/repos/:id', checkAbility('update', 'Repo'), async (req, res, next) => {
   try {
     const { id } = req.params;
+
+    if (!id || typeof id !== 'string') {
+      return res.status(400).json({ message: 'id is not valid' });
+    }
+
     const { name } = req.body;
+
+    if (!name || typeof name !== 'string') {
+      return res.status(400).json({ message: 'name is not valid' });
+    }
+
     const repo = await prisma.repos.update({
       where: { id: parseInt(id) },
       data: { name },
@@ -286,6 +305,11 @@ app.put('/api/repos/:id', checkAbility('update', 'Repo'), async (req, res, next)
 app.delete('/api/repos/:id', checkAbility('manage', 'Repo'), async (req, res, next) => {
   try {
     const { id } = req.params;
+
+    if (!id || typeof id !== 'string') {
+      return res.status(400).json({ message: 'id is not valid' });
+    }
+
     await prisma.repos.delete({
       where: { id: parseInt(id) },
     });
@@ -298,6 +322,11 @@ app.delete('/api/repos/:id', checkAbility('manage', 'Repo'), async (req, res, ne
 app.get('/api/repos/:id/commits', checkAbility('read', 'Commit'), async (req, res, next) => {
   try {
     const { id } = req.params;
+
+    if (!id || typeof id !== 'string') {
+      return res.status(400).json({ message: 'id is not valid' });
+    }
+
     const commits = await prisma.commits.findMany({
       where: { repoId: parseInt(id) },
       select: {
@@ -314,6 +343,11 @@ app.get('/api/repos/:id/commits', checkAbility('read', 'Commit'), async (req, re
 app.get('/api/repos/:id/commits/:commitId', checkAbility('read', 'Commit'), async (req, res, next) => {
   try {
     const { id, commitId } = req.params;
+
+    if (!id || typeof id !== 'string') {
+      return res.status(400).json({ message: 'id is not valid' });
+    }
+
     const commit = await prisma.commits.findUnique({
       where: { id: parseInt(commitId), repoId: parseInt(id) },
       select: {
@@ -333,7 +367,17 @@ app.get('/api/repos/:id/commits/:commitId', checkAbility('read', 'Commit'), asyn
 app.post('/api/repos/:id/commits/', checkAbility('create', 'Commit'), async (req, res, next) => {
   try {
     const { id } = req.params;
+
+    if (!id || typeof id !== 'string') {
+      return res.status(400).json({ message: 'id is not valid' });
+    }
+
     const { message } = req.body;
+
+    if (!message || typeof message !== 'string') {
+      return res.status(400).json({ message: 'message is not valid' });
+    }
+
     const commit = await prisma.commits.create({
       data: { message, repoId: parseInt(id) },
     });
@@ -346,7 +390,16 @@ app.post('/api/repos/:id/commits/', checkAbility('create', 'Commit'), async (req
 app.put('/api/repos/:id/commits/:commitId', checkAbility('update', 'Commit'), async (req, res, next) => {
   try {
     const { id, commitId } = req.params;
+
+    if (!id || typeof id !== 'string') {
+      return res.status(400).json({ message: 'id is not valid' });
+    }
+
     const { message } = req.body;
+
+    if (!message || typeof message !== 'string') {
+      return res.status(400).json({ message: 'message is not valid' });
+    }
     const commit = await prisma.commits.update({
       where: { id: parseInt(commitId), repoId: parseInt(id) },
       data: { message },
@@ -360,6 +413,15 @@ app.put('/api/repos/:id/commits/:commitId', checkAbility('update', 'Commit'), as
 app.delete('/api/repos/:id/commits/:commitId', checkAbility('manage', 'Commit'), async (req, res, next) => {
   try {
     const { id, commitId } = req.params;
+
+    if (!id || typeof id !== 'string') {
+      return res.status(400).json({ message: 'id is not valid' });
+    }
+
+    if (!commitId || typeof commitId !== 'string') {
+      return res.status(400).json({ message: 'commitId is not valid' });
+    }
+
     await prisma.commits.delete({
       where: { id: parseInt(commitId), repoId: parseInt(id) },
     });
@@ -372,6 +434,8 @@ app.delete('/api/repos/:id/commits/:commitId', checkAbility('manage', 'Commit'),
 app.use((req, res) => {
   res.status(404).send('Страница не найдена');
 });
+
+
 
 app.listen(3000, () => {
   console.log('Server is running on http://localhost:3000');
